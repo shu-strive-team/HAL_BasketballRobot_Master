@@ -73,7 +73,7 @@ typedef struct __PID_t
 
 }PID_t;
 
-void PID_StructInit(
+void PID_Init(
     PID_t* pid,
     uint32_t mode,
     uint32_t maxout,

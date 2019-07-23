@@ -48,10 +48,17 @@
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "sys.h"
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
+
+//BEEP端口定义
+#define BEEP PDout(6)
+
+//LED端口定义
+#define LED0 PFout(10)
+#define LED1 PFout(9)
 
 /* USER CODE END Private defines */
 
