@@ -64,9 +64,9 @@ float PID_Calc(PID_t *pid, float get, float set)
 		pid->pout = pid->p * pid->err[NOW];
 		pid->iout += pid->i * pid->err[NOW];
 		pid->dout = pid->d * (pid->err[NOW] - pid->err[LAST]);
-		abs_limit(&(pid->iout), pid->IntegralLimit);
+		abs_limit(&(pid->iout), pid->IntegralLimit);  //积分限幅
 		pid->pos_out = pid->pout + pid->iout + pid->dout;
-		abs_limit(&(pid->pos_out), pid->MaxOutput);
+		abs_limit(&(pid->pos_out), pid->MaxOutput);   //输出限幅
 		pid->last_pos_out = pid->pos_out; //update last time
 	}
 	else if (pid->pid_mode == DELTA_PID) //增量式P
@@ -92,7 +92,7 @@ float PID_Calc(PID_t *pid, float get, float set)
 }
 
 /*pid总体初始化-----------------------------------------------------------------*/
-void PID_StructInit(
+void PID_Init(
 	PID_t *pid,
 	uint32_t mode,
 	uint32_t maxout,

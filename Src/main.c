@@ -50,6 +50,9 @@
 /* USER CODE BEGIN Includes */
 #include "control.h"
 #include "math.h"
+#include "mpu6050.h"
+#include "lcd.h"
+#include "delay.h"
 
 /* USER CODE END Includes */
 
@@ -92,7 +95,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  u8 i = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -108,6 +111,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+  delay_init(168);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -124,30 +128,36 @@ int main(void)
   MX_TIM2_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim5);
+  HAL_SRAM_MspInit(&hsram1);
+  Control_Init();
   CAN1_Init();
   MOTOR_ControlInit();
-  HAL_UART_Receive_IT(&huart4, &rxPID.pidReadBuf, 1);
+  LCD_Init();
+  LCD_Show_Title();
   //选择上位机PID调参对象
   rxPID.pidAdjust = &(Motor[1].AnglePID);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	Set_MotorSpeed(0,0,0,0);
-	Motor[0].SetSpeed = Motor[1].AnglePID.p * 100;
-	output[0] = Motor[1].Speed;
-	output[1] = Motor[1].AngleOutput;
-//	output[2] = Motor[2].Current;
-//	output[3] = Motor[2].Temperature;
-	output[4] = Motor[1].SetSpeed;
-	UART_SendDataToPC(output, sizeof(output));
-	HAL_GPIO_WritePin(GPIOF,GPIO_PIN_9,GPIO_PIN_SET);
+	  Set_MotorSpeed(2500, -2500, -2500,2500);
+//	  output[2] = Motor[1].SetAngle;
+//	  output[0] = Motor[1].Angle;
+//	  output[0] = Motor[1].Speed;
+//	  output[2] = BasketballRobot.w[1];//Motor[2].Current;
+//	  output[3] = Motor[2].Temperature;
+	  delay_ms(1000);
+	  Set_MotorSpeed(-1000,1000,1000, -1000);
+	  delay_ms(80);
+	  Set_MotorSpeed(0,0,0,0);
+	  delay_ms(5000);
+	  UART_SendDataToPC(output, sizeof(output));
   }
   /* USER CODE END 3 */
 }

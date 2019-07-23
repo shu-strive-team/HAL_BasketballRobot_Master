@@ -42,6 +42,33 @@
 
 /* USER CODE BEGIN 0 */
 
+//USART1----视觉
+//USART2----陀螺仪
+//USART3----雷达
+
+//接收状态
+//bit15，接收完成标志
+//bit14，接收到0x0d
+//bit13~0，接收到的有效字节数目
+u8 USART_RX_BUF[USART_REC_LEN];
+
+u8 USART1_RX_BUF[USART_REC_LEN];  //接收缓冲,最大USART_REC_LEN个字节.
+u16 USART1_RX_STA=0;       		  //接收状态标记	
+
+u8 USART2_RX_BUF[USART_REC_LEN];  //接收缓冲,最大USART_REC_LEN个字节.
+u16 USART2_RX_STA = 0;			  //接收状态标记
+
+u8 USART3_RX_BUF[USART_REC_LEN];  //接收缓冲,最大USART_REC_LEN个字节.
+u16 USART3_RX_STA = 0;			  //接收状态标记
+
+uint8_t receive1 = 0;
+uint8_t receive2 = 0;		      //接收完成标志
+uint8_t receive3 = 0;
+
+vu8 aRxBuffer1[USART1_REC_LEN];   //HAL库使用的串口接收缓冲
+vu8 aRxBuffer2[USART2_REC_LEN];   //HAL库使用的串口接收缓冲
+vu8 aRxBuffer3[USART3_REC_LEN];   //HAL库使用的串口接收缓冲
+
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart4;
@@ -338,7 +365,7 @@ int fputc(int ch, FILE *f)
 void usart_send_char(u8 c)
 {
     while(__HAL_UART_GET_FLAG(&huart4,UART_FLAG_TC)==RESET){}; 
-    UART4->DR=c;  
+    UART4->DR=c;
 } 
 
 //函数说明：将单精度浮点数据转成4字节数据并存入指定地址 

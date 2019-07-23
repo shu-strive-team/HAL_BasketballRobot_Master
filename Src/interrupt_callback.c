@@ -4,6 +4,8 @@
 #include "can.h"
 #include "math.h"
 #include <string.h>
+#include "get_info.h"
+#include "lcd.h"
 
 uint8_t times;
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
@@ -20,15 +22,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance == TIM5)
 	{
 		times ++;
+		GetYaw();
+		Get_Position();
 		if (times % 5 == 0)
 		{
-			SetMotorSpeed_pid();
-		    SetMotorAngle_pid();
-			Motor[2].AngleOutput = 0;
-			Motor[3].AngleOutput = 0;
-			Motor[0].AngleOutput = 0;
-			CAN_SetMotorCurrent(Motor[0].AngleOutput,Motor[1].AngleOutput,Motor[2].AngleOutput,Motor[3].AngleOutput);
-
+			Calc_MotorSpeed_pid();
+//		    Calc_MotorAngle_pid();
+//			CAN_SetMotorCurrent(Motor[0].SpeedOutput + Motor[0].AngleOutput,
+//			                    Motor[1].SpeedOutput + Motor[1].AngleOutput,
+//			                    Motor[2].SpeedOutput + Motor[2].AngleOutput,
+//			                    Motor[3].SpeedOutput + Motor[3].AngleOutput);
+			CAN_SetMotorCurrent(Motor[0].SpeedOutput,
+			                    Motor[1].SpeedOutput,
+			                    Motor[2].SpeedOutput,
+			                    Motor[3].SpeedOutput);
+		}
+		if (times % 10 == 0)
+		{
+			ReadEncoder();
 		}
 	}
 }
@@ -37,6 +48,74 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 char charBuf[4];
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+	u8 sum1 = 0,sum2 = 0,sum3 = 0,i = 0;
+	
+	if (huart->Instance == USART1)
+	{
+		
+	}
+	
+//接收陀螺仪数据
+//陀螺仪通行协议看OneNote
+	if (huart->Instance == USART2)
+	{
+//		ReceiveIMUData();
+		
+		if ((USART2_RX_STA & 0x8000) == 0)  //接收未完成
+		{
+			USART2_RX_BUF[USART2_RX_STA & 0x3FFF] = aRxBuffer2[0];
+			
+			if ((USART2_RX_STA & 0x3FFF) == 0 && (USART2_RX_BUF[0] != 0x55))
+				return;  //第一个数据不是帧头0x55，跳过
+			if ((USART2_RX_STA & 0x3FFF) == 1 && (USART2_RX_BUF[1] != 0x53))
+				return;  //第二个数据不是角度标志位0x53，跳过
+			
+			USART2_RX_STA ++;
+			
+			if ((USART2_RX_STA & 0x3FFF) == 11)
+			{
+				for (i = 0;i < 10; i ++)
+				    sum2 += USART2_RX_BUF[i];
+				
+				if (sum2 == USART2_RX_BUF[10])
+					USART2_RX_STA |= 0x8000;  //接收完成
+				else
+					USART2_RX_STA = 0;        //数据错误，重新接收
+			}
+		}
+	}
+	
+	if (huart->Instance == USART3)
+	{
+//		ReceiveRadarData();
+		if ((Radar.RX_STA & 0x8000) == 0)
+		{
+			Radar.RX_BUF[Radar.RX_STA & 0X3FFF] = aRxBuffer3[0];
+			
+			if ((Radar.RX_STA & 0X3FFF) == 0 && Radar.RX_BUF[0] != '#')
+				return;  //第一个数据不是'#'
+			if ((Radar.RX_STA & 0X3FFF) == 1 && Radar.RX_BUF[1] != '&')
+			{            //第二个数据不是'&'
+				Radar.RX_STA = 0;
+				return;
+			}
+			if ((Radar.RX_STA & 0X3FFF) ==2 && Radar.RX_BUF[2] != 'r')
+			{            //第三个数据不是'r'
+				Radar.RX_STA = 0;
+				return;
+			}
+			
+			Radar.RX_STA ++;
+			
+			for (i = 0;i < 10;i++)
+			    sum3 += Radar.RX_BUF[i];
+			if (sum3 == Radar.RX_BUF[9])
+				Radar.RX_STA |= 0x8000;  //接收完成
+			else
+				Radar.RX_STA = 0;        //数据错误，重新接收
+		}
+	}
+		
 	/*************PID参数串口数据处理***********/
 	if (huart->Instance == UART4)
 	{

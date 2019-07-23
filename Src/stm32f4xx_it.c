@@ -38,6 +38,8 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "control.h"
+#include "usart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -294,11 +296,24 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-
+	u32 timeout = 0;
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
-
+	timeout = 0;
+	while (HAL_UART_GetState(&huart2) !=  HAL_UART_STATE_READY)  //准备就绪
+	{
+		timeout ++;  //超时处理
+		if (timeout > HAL_MAX_DELAY)
+			break;
+	}
+	timeout = 0;
+	while (HAL_UART_Receive_IT(&huart2,(u8 *)aRxBuffer2,1) != HAL_OK)  //一次处理完成之后，重新开启中断并设置RxXferCount为1
+	{
+		timeout ++;  //超时处理
+		if (timeout > HAL_MAX_DELAY)
+			break;
+	}
   /* USER CODE END USART2_IRQn 1 */
 }
 
@@ -308,11 +323,24 @@ void USART2_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-
+    u32 timeout;
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   /* USER CODE BEGIN USART3_IRQn 1 */
-
+    timeout = 0;
+	while (HAL_UART_GetState(&huart3) !=  HAL_UART_STATE_READY)  //准备就绪
+	{
+		timeout ++;  //超时处理
+		if (timeout > HAL_MAX_DELAY)
+			break;
+	}
+	timeout = 0;
+	while (HAL_UART_Receive_IT(&huart3,(u8 *)aRxBuffer3,1) != HAL_OK)  //一次处理完成之后，重新开启中断并设置RxXferCount为1
+	{
+		timeout ++;  //超时处理
+		if (timeout > HAL_MAX_DELAY)
+			break;
+	}
   /* USER CODE END USART3_IRQn 1 */
 }
 
@@ -336,11 +364,25 @@ void TIM5_IRQHandler(void)
 void UART4_IRQHandler(void)
 {
   /* USER CODE BEGIN UART4_IRQn 0 */
-
+    uint32_t timeout = 0;
   /* USER CODE END UART4_IRQn 0 */
   HAL_UART_IRQHandler(&huart4);
   /* USER CODE BEGIN UART4_IRQn 1 */
-
+	timeout = 0;
+	while (HAL_UART_GetState(&huart4) != HAL_UART_STATE_READY)  //准备就绪
+	{
+		timeout ++;  //超时处理
+		if (timeout  > HAL_MAX_DELAY)
+			break;
+	}
+	
+	timeout = 0;
+	while (HAL_UART_Receive_IT(&huart4, &rxPID.pidReadBuf, 1) != HAL_OK)  //一次处理完成之后，重新开启中断并设置RxXferCount为1
+	{
+		timeout ++;  //超时处理
+		if (timeout  > HAL_MAX_DELAY)
+			break;
+	}
   /* USER CODE END UART4_IRQn 1 */
 }
 
